@@ -17,5 +17,6 @@
 
 /* Project */
 #define NUM_LIGHTS 10
+#define NUM_FADERS 11
 
 #endif
