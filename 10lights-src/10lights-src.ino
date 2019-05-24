@@ -24,7 +24,7 @@ uint8_t nextCue[NUM_FADERS];
 uint8_t currentLighting[NUM_LIGHTS];
 
 /* Gen - Pin Assignments */
-uint8_t analogInputs[]      {A8, A6, A5, A4, A3, A2, A1, A0, A7, A9, A10}; // Faders, last is master
+uint8_t analogInputs[]      {A10, A8, A6, A5, A4, A3, A2, A1, A0, A7, A9}; // Faders, first is master
 uint8_t digitalInputs[]     {40, 52, 53};                                  // store, back, go
 uint8_t digitalOutputsPWM[] {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};          // channel indicator LED, first is master
 uint8_t digitalOutputs[]    {22, 23, 24, 25, 26, 27, 28, 29, 30, 31};      // cue indicator LED, 
@@ -75,7 +75,7 @@ void setup(){
 void loop(){
     read_inputs();                  // this should only happen if needed
     loop_execute( check_mode() );
-
+    delay(20);
 }
 
 void read_inputs(){
@@ -107,8 +107,8 @@ void read_inputs(){
 void write_to_leds(){
     // writes values to PWM digital
     // LEDS have opposite direction to inputs
-    for (int i = 0; i < NUM_FADERS; i++) {
-        digitalWrite(digitalOutputsPWM[NUM_FADERS - (i + 1) ], values[i]);
+    for (int i = 0; i < NUM_LIGHTS; i++) {
+        analogWrite(digitalOutputsPWM[i], values[i]);
     }
 }
 
@@ -125,10 +125,10 @@ void loop_execute(uint8_t called_mode){
             Serial.println("Mode 1");
 
             // calculate values to pass, mind order
-            for (int i = 0; i < NUM_LIGHTS; i++) {
-                values[i] = cap(faderValues[i], faderValues[NUM_FADERS - 1]);
+            for (int i = 1; i < NUM_LIGHTS; i++) {
+                values[i] = cap(faderValues[i], faderValues[0]);
             }
-            values[NUM_FADERS - 1] = faderValues[NUM_FADERS - 1];
+            values[0] = faderValues[0];
 
         break;
 
