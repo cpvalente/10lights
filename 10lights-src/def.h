@@ -2,10 +2,13 @@
 #define DEF_H
 
 /* Gen */
+#include "utils.h"
+#define BYTE_INV 0.003921568627
 
 /* Gen - SW Debounce */
 #define DEBOUNCE_TIME 200
-#define WARM_UP_TIME 500
+#define WARM_UP_TIME  500
+#define STORE_TIME    3000
 
 /* Serial */
 #define SERIAL_BAUD 115200

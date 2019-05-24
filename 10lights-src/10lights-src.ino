@@ -6,8 +6,10 @@
  *  Code by Carlos Valente
  *  
  *  TODO:
+ *  Gen
+ *  - Modes pass values as reference
  *  Pin definitions
- *  - define pin names from table 
+ *  - pins as port 
  */
 #include "def.h"
 
@@ -30,6 +32,8 @@ uint8_t digitalOutputs[]    {22, 23, 24, 25, 26, 27, 28, 29, 30, 31};      // cu
 /* Gen - Pin Values */
 uint8_t store, back, go;
 uint8_t faderValues[NUM_FADERS];
+uint8_t values[NUM_FADERS];
+
 
 void setup(){
 
@@ -77,17 +81,37 @@ void loop(){
 void read_inputs(){
     // reads declared inputs
 
+    Serial.println("Reading analog inputs...");
+
     // Read Input - Analog Pins
     for (int i = 0; i < NUM_FADERS; i++) {
-        faderValues[i] = max(1, analogRead(i) >> 2);
+        faderValues[i] = analogRead8(i);
+
+        Serial.print(i);
+        Serial.print(": ");
+        Serial.println(faderValues[i]);
     }
+
+    Serial.println("Reading digital inputs...");
 
     // Read Input - Digital Pins INPUT
     store = digitalRead(digitalInputs[0]);
     back  = digitalRead(digitalInputs[1]);
     go    = digitalRead(digitalInputs[2]);
 
+    Serial.print("Store: "); Serial.println(store);
+    Serial.print("Back: ");  Serial.println(back);
+    Serial.print("Go: ");    Serial.println(go);
 }
+
+void write_to_leds(){
+    // writes values to PWM digital
+    // LEDS have opposite direction to inputs
+    for (int i = 0; i < NUM_FADERS; i++) {
+        digitalWrite(digitalOutputsPWM[NUM_FADERS - (i + 1) ], values[i]);
+    }
+}
+
 uint8_t check_mode(){
     // reads mode selection input
     return 0;
@@ -99,15 +123,24 @@ void loop_execute(uint8_t called_mode){
         case MODE_1:
             // Fader is value
             Serial.println("Mode 1");
+
+            // calculate values to pass, mind order
+            for (int i = 0; i < NUM_LIGHTS; i++) {
+                values[i] = cap(faderValues[i], faderValues[NUM_FADERS - 1]);
+            }
+            values[NUM_FADERS - 1] = faderValues[NUM_FADERS - 1];
+
         break;
 
         case MODE_2:
             // Record
             Serial.println("Mode 2");
         break;
+
         case MODE_3:
             // Playback
             Serial.println("Mode 3");
         break;
     }
+    write_to_leds();            // pass the values here
 }
