@@ -25,9 +25,10 @@ uint8_t currentLighting[NUM_LIGHTS];
 
 /* Gen - Pin Assignments */
 uint8_t analogInputs[]      {A10, A8, A6, A5, A4, A3, A2, A1, A0, A7, A9}; // Faders, first is master
+uint8_t digitalOutputsPWM[] {2,   12, 11, 10,  9,  8,  7 , 6,  5,  4,  3}; // channel indicator LED, first is master
+uint8_t digitalOutputs[]    {22, 23, 24, 25, 26, 27, 28, 29, 30, 31};      // cue indicator LED last
 uint8_t digitalInputs[]     {40, 52, 53};                                  // store, back, go
-uint8_t digitalOutputsPWM[] {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};          // channel indicator LED, first is master
-uint8_t digitalOutputs[]    {22, 23, 24, 25, 26, 27, 28, 29, 30, 31};      // cue indicator LED, 
+
 
 /* Gen - Pin Values */
 uint8_t store, back, go;
