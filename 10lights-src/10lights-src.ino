@@ -86,7 +86,7 @@ void read_inputs(){
 
     // Read Input - Analog Pins
     for (int i = 0; i < NUM_FADERS; i++) {
-        faderValues[i] = analogRead8(i);
+        faderValues[i] = analogRead8(analogInputs[i]);
 
         Serial.print(i);
         Serial.print(": ");
@@ -108,8 +108,12 @@ void read_inputs(){
 void write_to_leds(){
     // writes values to PWM digital
     // LEDS have opposite direction to inputs
+    Serial.println("Writing to PWM outputs inputs...");
     for (int i = 0; i < NUM_LIGHTS; i++) {
         analogWrite(digitalOutputsPWM[i], values[i]);
+        Serial.print(i);
+        Serial.print(": ");
+        Serial.println(values[i]);
     }
 }
 
