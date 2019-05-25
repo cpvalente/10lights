@@ -53,7 +53,7 @@ void setup(){
     // Pin Assignments - Digital Pins INPUT
     arraySize = sizeof(digitalInputs) / sizeof(digitalInputs[0]);
     for (int i = 0; i < arraySize; i++) {
-        pinMode(digitalInputs[i], INPUT);
+        pinMode(digitalInputs[i], INPUT_PULLUP);
     }
 
     // Pin Assignments - Digital Pins PWM OUTPUT
