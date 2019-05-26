@@ -6,7 +6,7 @@
 #define BYTE_INV 0.003921568627
 
 /* Gen - SW Debounce */
-#define DEBOUNCE_TIME 200
+#define DEBOUNCE_TIME 50
 #define WARM_UP_TIME  500
 #define STORE_TIME    3000
 
@@ -21,5 +21,6 @@
 /* Project */
 #define NUM_LIGHTS 10
 #define NUM_FADERS 11
+#define NUM_CUES   10
 
 #endif
