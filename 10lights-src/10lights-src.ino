@@ -30,7 +30,7 @@ uint8_t selectedCue;
 /* Gen - Pin Assignments */
 const uint8_t analogInputs[]      {A10, A8, A6, A5, A4, A3, A2, A1, A0, A7, A9}; // Faders, first is master
 const uint8_t digitalOutputsPWM[] {2,   12, 11, 10,  9,  8,  7 , 6,  5,  4,  3}; // channel indicator LED, first is master
-const uint8_t digitalOutputs[]    {22, 23, 24, 25, 26, 27, 28, 29, 30, 31};      // cue indicator LED last
+const uint8_t digitalOutputs[]    {22, 27, 23, 28, 24, 29, 25, 30, 26, 31};      // cue indicator LED last
 const uint8_t digitalInputs[]     {40, 52, 53};                                  // store, back, go
 
 /* Gen - Pin Values Buttons */
