@@ -145,7 +145,7 @@ uint8_t check_mode(){
             prevStore = true;
             lastStore = timeNow;
         }
-    }
+    } else  prevStore = false;
 
     // go backwards
     if (back && !prevBack) { 
