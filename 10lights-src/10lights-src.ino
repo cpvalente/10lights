@@ -189,7 +189,7 @@ void loop_execute(uint8_t called_mode){
             values[0] = faderValues[0]; // master not affected
 
             for (int i = 0; i < NUM_CUES; i++) {
-                values[i] = (selectedCue == i); // does this work?
+                leds[i] = (selectedCue == i);
             }
 
         break;
