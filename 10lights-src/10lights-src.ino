@@ -21,10 +21,11 @@ enum states {MODE_1, MODE_2, MODE_3};
 uint8_t state = MODE_1;
 
 /* Gen - Lighting States */
-uint8_t currentCue[NUM_FADERS];   // numLights + cue fade time
+uint8_t currentCue[NUM_FADERS];                   // numLights + cue fade time
 uint8_t previousCue[NUM_FADERS];
 uint8_t nextCue[NUM_FADERS];
 uint8_t currentLighting[NUM_LIGHTS];
+uint8_t lightingData[NUM_CUES][NUM_LIGHTS + 1] = {0};   // numLights + cue fade time
 uint8_t selectedCue;
 
 /* Gen - Pin Assignments */
@@ -79,6 +80,12 @@ void setup(){
     // Serial setup
     Serial.begin(115200);
 
+    Serial.print("Initializing array... ");
+    // initialize array to zero
+    // will be replaced with EEPROM read
+    Serial.println("finished");
+
+    selectedCue = 0;
 }
 
 void loop(){
@@ -147,7 +154,14 @@ uint8_t check_mode(){
             prevStore = true;
             lastStore = timeNow;
         }
-    } else  prevStore = false;
+    } else {
+        if (prevStore) {
+            for (int i = 0; i < NUM_LIGHTS; i++) {
+                lightingData[selectedCue][i] = values[i];
+            }
+        }
+        prevStore = false;
+    } 
 
     // go backwards
     if (back && !prevBack) { 
@@ -168,8 +182,6 @@ uint8_t check_mode(){
 
     Serial.print("Selected Cue: ");
     Serial.println(selectedCue);
-    Serial.print("Selected Mode: ");
-    Serial.println(called_mode);
 
     return called_mode;
 }
@@ -199,11 +211,30 @@ void loop_execute(uint8_t called_mode){
         case MODE_2:
             // Record
             Serial.println("Mode 2");
+
+            // calculate values to pass
+            for (int i = 1; i < NUM_FADERS; i++) {
+                values[i] = cap(faderValues[i], faderValues[0]);
+            }
+            values[0] = faderValues[0]; // master not affected
+
+            for (int i = 0; i < NUM_CUES; i++) {
+                leds[i] = (selectedCue == i);
+            }
         break;
 
         case MODE_3:
             // Playback
             Serial.println("Mode 3");
+    
+            // calculate values to pass
+            for (int i = 1; i < NUM_FADERS; i++) {
+                values[i] = lightingData[selectedCue][i];
+            }
+
+            for (int i = 0; i < NUM_CUES; i++) {
+                leds[i] = (selectedCue == i);
+            }
         break;
     }
 }
