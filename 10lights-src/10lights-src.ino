@@ -227,7 +227,7 @@ void loop_execute(uint8_t called_mode){
  
             // calculate values to pass
             for (int i = 1; i < NUM_FADERS; i++) {
-                values[i] = lightingData[selectedCue][i];
+                values[i] = largest(lightingData[selectedCue][i],faderValues[i]);
             }
         break;
     }
