@@ -8,7 +8,7 @@
 /* Gen - SW Debounce */
 #define DEBOUNCE_TIME 50
 #define WARM_UP_TIME  500
-#define STORE_TIME    3000
+#define STORE_TIME    2500
 
 /* Serial */
 #define SERIAL_BAUD 115200
