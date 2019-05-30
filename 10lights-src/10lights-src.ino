@@ -28,7 +28,7 @@ uint8_t currentLighting[NUM_LIGHTS];
 uint8_t selectedCue;
 
 /* Gen - Pin Assignments */
-const uint8_t analogInputs[]      {A10, A8, A6, A5, A4, A3, A2, A1, A0, A7, A9}; // Faders, first is master
+const uint8_t analogInputs[]      {A10, A0, A1, A2, A3, A4, A5, A6, A7, A8, A9}; // Faders, first is master
 const uint8_t digitalOutputsPWM[] {2,   12, 11, 10,  9,  8,  7 , 6,  5,  4,  3}; // channel indicator LED, first is master
 const uint8_t digitalOutputs[]    {22, 27, 23, 28, 24, 29, 25, 30, 26, 31};      // cue indicator LED last
 const uint8_t digitalInputs[]     {13, 52, 53};                                  // store, back, go
@@ -118,7 +118,7 @@ void read_inputs(){
 void write_to_leds(){
     // writes values to PWM digital
     Serial.println("Writing to PWM outputs inputs...");
-    for (int i = 0; i < NUM_LIGHTS; i++) {
+    for (int i = 0; i < NUM_FADERS; i++) {
         analogWrite(digitalOutputsPWM[i], values[i]);
         Serial.print(i);
         Serial.print(": ");
@@ -185,7 +185,7 @@ void loop_execute(uint8_t called_mode){
             Serial.println("Mode 1");
 
             // calculate values to pass
-            for (int i = 1; i < NUM_LIGHTS; i++) {
+            for (int i = 1; i < NUM_FADERS; i++) {
                 values[i] = cap(faderValues[i], faderValues[0]);
             }
             values[0] = faderValues[0]; // master not affected
