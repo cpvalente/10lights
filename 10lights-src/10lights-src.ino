@@ -21,7 +21,7 @@ enum states {MODE_1, MODE_2, MODE_3};
 uint8_t state = MODE_1;
 
 /* Gen - Lighting States */
-uint8_t currentCue[NUM_FADERS];                   // numLights + cue fade time
+uint8_t currentCue[NUM_FADERS];                         // numLights + cue fade time
 uint8_t previousCue[NUM_FADERS];
 uint8_t nextCue[NUM_FADERS];
 uint8_t currentLighting[NUM_LIGHTS];
@@ -93,6 +93,7 @@ void loop(){
     read_inputs();                  // this should only happen if needed
     loop_execute( check_mode() );   // call state machine
     write_to_leds();                // write outputs
+    write_to_indicators();          // write to UI LEDs
     delay(20);                      // !! replace with refresh rate
 }
 
@@ -138,6 +139,12 @@ void write_to_leds(){
     }
 }
 
+void write_to_indicators(){
+    for (int i = 0; i < NUM_CUES; i++) {
+        leds[i] = (selectedCue == i);
+    }
+}
+
 uint8_t check_mode(){
     // reads mode selection input
     uint8_t called_mode = 11;
@@ -156,7 +163,7 @@ uint8_t check_mode(){
         }
     } else {
         if (prevStore) {
-            for (int i = 0; i < NUM_LIGHTS; i++) {
+            for (int i = 1; i < NUM_LIGHTS + 1; i++) {
                 lightingData[selectedCue][i] = values[i];
             }
         }
@@ -166,8 +173,8 @@ uint8_t check_mode(){
     // go backwards
     if (back && !prevBack) { 
         selectedCue -= 1;
-        if (selectedCue >= 10) {
-            selectedCue = 9;
+        if (selectedCue >= NUM_CUES) {
+            selectedCue = NUM_CUES - 1;
         }
         prevBack = true;
     }
@@ -201,11 +208,6 @@ void loop_execute(uint8_t called_mode){
                 values[i] = cap(faderValues[i], faderValues[0]);
             }
             values[0] = faderValues[0]; // master not affected
-
-            for (int i = 0; i < NUM_CUES; i++) {
-                leds[i] = (selectedCue == i);
-            }
-
         break;
 
         case MODE_2:
@@ -217,23 +219,15 @@ void loop_execute(uint8_t called_mode){
                 values[i] = cap(faderValues[i], faderValues[0]);
             }
             values[0] = faderValues[0]; // master not affected
-
-            for (int i = 0; i < NUM_CUES; i++) {
-                leds[i] = (selectedCue == i);
-            }
         break;
 
         case MODE_3:
             // Playback
             Serial.println("Mode 3");
-    
+ 
             // calculate values to pass
             for (int i = 1; i < NUM_FADERS; i++) {
                 values[i] = lightingData[selectedCue][i];
-            }
-
-            for (int i = 0; i < NUM_CUES; i++) {
-                leds[i] = (selectedCue == i);
             }
         break;
     }
