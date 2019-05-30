@@ -139,7 +139,9 @@ uint8_t check_mode(){
         if (prevStore) {
             if (timeNow - lastStore > STORE_TIME) {
                 if (state == MODE_1) called_mode = MODE_2;
-                else called_mode = MODE_3;
+                else if (state == MODE_2) called_mode = MODE_3;
+                else called_mode = MODE_1;
+                prevStore = false;
             }
         } else {
             prevStore = true;
