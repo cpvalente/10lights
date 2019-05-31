@@ -2,7 +2,7 @@
 
 Simple project for a 10ch lighting desk
 ----
-## Operation Description
+### Operation Description
 
 ###### Mode 1
 Just as a fader/dimmer. IE the fader position on CH1 is translated to output 1, etc.  Master fader controls the overall brightness. The buttons does not do anything unless you press STORE for more than 3 seconds.
@@ -21,8 +21,7 @@ How I like it to work:
 Pressing GO and BACK at the same time for more than 3 seconds erases all cues.
 If STORE is pressed for more than 3 seconds the system enters into Mode 3 - mode 3 is indicated by CUE LED 1, 2 and 3 flashing 3 times.
 
-Notes:
-Initial idea was to have only a fixed fade time, but if it is possible it would be great to have it be selected via the master fader. Hopefully I can manage to fit in a bar graph LED to indicate time. 
+If STORE is pressed for more than 3 seconds the system enters into Mode 3
 
 ###### Mode 3
 In mode 3 you can play back the (up to) 10 stored cues in sequence.
@@ -34,14 +33,14 @@ How I like it to work:
 ...
 11 - When cue 10 is reached and its fade is finished, system is ready to loop. CUE LED 1 is flashing indicating that cue 1 is next cue, while all other CUE LEDs are on. Output is in cue 10. If GO is pressed, we fade to cue 1, and everything repeats from step 1.
 
-If BACK is pressed we snap?/or fade? to the value of the previous cue. (open to suggestions)
+If BACK is pressed we fade to the value of the previous cue using its fade time.
 If STORE is pressed for more than 3 seconds the system enters into Mode 1 - mode 1 is indicated by CUE LED 1 flashing 3 times.
 
 Notes:
 Would it be possible to have the MASTER fader override the fade time of the cues? So say when it is at 50%, the fade times are like they are stored in the cue. If it is at 0% it is for example 2 times slower. If it is at 100% the fade is 2 times faster? 
 This is not important at all, would just be something for the master fader to do in this mode.
 
-## Pinout
+### Pinout
 
 | ARDUINO PIN |	ATMEL  | PIN | IS WHAT     | DIRECTION | TYPE           | FUNCTION | NOTES                                                                            |
 | ----------- |	------ | --- | ----------- | --------- | ---------------| -------- | -------------------------------------------------------------------------------- |						
