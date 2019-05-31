@@ -8,12 +8,20 @@
  *  TODO:
  *  Gen
  *  - Modes pass values as reference
+ *  - Toggle verbose
+ *  - Three button surprise
+ *  Functionality
+ *  - Fade time from cue
+ *  - overflow on fade?
+ *  - read / write to EEPROM
  *  Pin definitions
  *  - pins as port 
  *  LEDs
  *  - duty cycle for cue leds 
  *  -- https://www.reddit.com/r/arduino/comments/5pycxp/adjusting_frequency_and_duty_cycle_of_led_blink/
+ *  - indicator LEDs to flash according to mode select 
  */
+
 #include "def.h"
 
 /* Gen - State Machine */
@@ -21,29 +29,26 @@ enum states {MODE_1, MODE_2, MODE_3};
 uint8_t state = MODE_1;
 
 /* Gen - Lighting States */
-uint8_t currentCue[NUM_FADERS];                         // numLights + cue fade time
-uint8_t previousCue[NUM_FADERS];
-uint8_t nextCue[NUM_FADERS];
-uint8_t currentLighting[NUM_LIGHTS];
 uint8_t lightingData[NUM_CUES][NUM_LIGHTS + 1] = {0};   // numLights + cue fade time
 uint8_t selectedCue;
+uint32_t fadeTime = 3000;                               // temporary
+bool bFading = false;
 
 /* Gen - Pin Assignments */
 const uint8_t analogInputs[]      {A10, A0, A1, A2, A3, A4, A5, A6, A7, A8, A9}; // Faders, first is master
 const uint8_t digitalOutputsPWM[] {2,   12, 11, 10,  9,  8,  7 , 6,  5,  4,  3}; // channel indicator LED, first is master
-const uint8_t digitalOutputs[]    {22, 27, 23, 28, 24, 29, 25, 30, 26, 31};      // cue indicator LED last
+const uint8_t digitalOutputs[]    {22, 27, 23, 28, 24, 29, 25, 30, 26, 31};      // cue indicator LED
 const uint8_t digitalInputs[]     {13, 52, 53};                                  // store, back, go
 
 /* Gen - Pin Values Buttons */
-byte store, back, go;
-byte prevStore, prevBack, prevGo;
-long lastStore, lastBack, lastGo, timeNow;
+bool store, back, go;
+bool prevStore, prevBack, prevGo;
+uint32_t lastStore, lastBack, lastGo, timeNow;
 
 /* Gen - Pin Values Faders */
-uint8_t faderValues[NUM_FADERS];
-uint8_t values[NUM_FADERS];
-byte    leds[NUM_CUES];
-
+uint8_t faderValues[NUM_FADERS];     // values from faders at each iteration
+uint8_t values[NUM_FADERS];          // values for output
+uint8_t leds[NUM_CUES];              // values for indicator leds
 
 void setup(){
 
@@ -81,10 +86,10 @@ void setup(){
     Serial.begin(115200);
 
     Serial.print("Initializing array... ");
-    // initialize array to zero
     // will be replaced with EEPROM read
     Serial.println("finished");
 
+    /* Initialize aux */
     selectedCue = 0;
 }
 
@@ -105,7 +110,6 @@ void read_inputs(){
     // Read Input - Analog Pins
     for (int i = 0; i < NUM_FADERS; i++) {
         faderValues[i] = analogRead8(analogInputs[i]);
-
         Serial.print(i);
         Serial.print(": ");
         Serial.println(faderValues[i]);
@@ -132,29 +136,30 @@ void write_to_leds(){
         Serial.print(": ");
         Serial.println(values[i]);
     }
-
-    for (int i = 0; i < NUM_CUES; i++) {
-        // replace by duty cycle 
-        digitalWrite(digitalOutputs[i], leds[i]);
-    }
 }
 
 void write_to_indicators(){
+    // write to lighting cue indicator LEDs
     for (int i = 0; i < NUM_CUES; i++) {
-        leds[i] = (selectedCue == i);
+        digitalWrite(digitalOutputs[i], leds[i]);
     }
 }
 
 uint8_t check_mode(){
     // reads mode selection input
-    uint8_t called_mode = 11;
+    uint8_t called_mode = state;
+    bool bStartFade = false;
 
+    // store changes between modes, check everytime
     if (store) {
         if (prevStore) {
             if (timeNow - lastStore > STORE_TIME) {
                 if (state == MODE_1) called_mode = MODE_2;
                 else if (state == MODE_2) called_mode = MODE_3;
-                else called_mode = MODE_1;
+                else {
+                    called_mode = MODE_1;
+                    leds[NUM_CUES] = {0};   // reset cue LEDs
+                }
                 prevStore = false;
             }
         } else {
@@ -170,22 +175,32 @@ uint8_t check_mode(){
         prevStore = false;
     } 
 
-    // go backwards
-    if (back && !prevBack) { 
-        selectedCue -= 1;
-        if (selectedCue >= NUM_CUES) {
-            selectedCue = NUM_CUES - 1;
+    // go and go backwards only work on mode 2 and 3
+    if (called_mode != MODE_1) {
+        // go backwards
+        if (back && !prevBack) { 
+            selectedCue -= 1;
+            if (selectedCue >= NUM_CUES) {
+                selectedCue = NUM_CUES - 1;
+            }
+            prevBack = true;
+            bStartFade = true;
         }
-        prevBack = true;
-    }
-    if (!back) prevBack = false;
+        if (!back) prevBack = false;
 
-    // go forwards
-    if (go && !prevGo) {
-        selectedCue = (selectedCue + 1) % NUM_CUES;
-        prevGo = true;
+        // go forwards
+        if (go && !prevGo) {
+            selectedCue = (selectedCue + 1) % NUM_CUES;
+            prevGo = true;
+            bStartFade = true;
+        }
+        if (!go) prevGo = false;
+
+        if (bStartFade) {
+            lastGo = timeNow;
+            bFading = true;
+        }
     }
-    if (!go) prevGo = false;
 
     Serial.print("Selected Cue: ");
     Serial.println(selectedCue);
@@ -214,21 +229,61 @@ void loop_execute(uint8_t called_mode){
             // Record
             Serial.println("Mode 2");
 
-            // calculate values to pass
+            // calculate values for leds
             for (int i = 1; i < NUM_FADERS; i++) {
                 values[i] = cap(faderValues[i], faderValues[0]);
             }
             values[0] = faderValues[0]; // master not affected
+
+            // calculate values for indicator LEDs
+            for (int i = 0; i < NUM_CUES; i++) {
+                leds[i] = (selectedCue == i);
+             }
         break;
 
         case MODE_3:
             // Playback
             Serial.println("Mode 3");
- 
+            uint32_t fadeTimeElapsed;
+            float step = 1.0f;
+
+            // calculate cue transition position
+            if (bFading) {
+                fadeTimeElapsed = timeNow - lastGo;
+                if (fadeTimeElapsed < fadeTime) {
+                    step = ((float)fadeTimeElapsed / fadeTime);
+                    Serial.print("Fade time ");
+                    Serial.print(fadeTimeElapsed);
+                    Serial.print(" completed ");
+                    Serial.println(step);
+                } else {
+                    bFading = false;
+                }
+            }
+
             // calculate values to pass
             for (int i = 1; i < NUM_FADERS; i++) {
-                values[i] = largest(lightingData[selectedCue][i],faderValues[i]);
+                uint8_t v = 0;
+                if (bFading) {
+                    Serial.print("Channel ");
+                    Serial.print(i);
+                    Serial.print(" fading, ");
+                    Serial.print(v);
+                    Serial.print(" of ");
+                    Serial.println((lightingData[selectedCue][i]));   
+                    v = values[i] + ((lightingData[selectedCue][i] - values[i]) * step);
+                } else {
+                    v = lightingData[selectedCue][i];
+                }
+                values[i] = cap( largest(v, faderValues[i]) , faderValues[0] );
             }
+
+            values[0] = faderValues[0]; // master not affected
+
+            // calculate values for indicator LEDs
+            for (int i = 0; i < NUM_CUES; i++) {
+                leds[i] = (selectedCue == i);
+             }
         break;
     }
 }
