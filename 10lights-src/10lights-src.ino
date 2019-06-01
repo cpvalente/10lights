@@ -11,7 +11,6 @@
  *  - Toggle verbose
  *  - Three button surprise
  *  Functionality
- *  - Fade time from cue
  *  - overflow on fade?
  *  - read / write to EEPROM
  *  Pin definitions
@@ -31,7 +30,7 @@ uint8_t state = MODE_1;
 /* Gen - Lighting States */
 uint8_t lightingData[NUM_CUES][NUM_LIGHTS + 1] = {0};   // numLights + cue fade time
 uint8_t selectedCue;
-uint32_t fadeTime = 3000;                               // temporary
+uint32_t fadeTime;
 bool bFading = false;
 
 /* Gen - Pin Assignments */
@@ -158,7 +157,7 @@ uint8_t check_mode(){
                 else if (state == MODE_2) called_mode = MODE_3;
                 else {
                     called_mode = MODE_1;
-                    leds[NUM_CUES] = {0};   // reset cue LEDs
+                    memset(leds, 0, sizeof(NUM_CUES));      // all indicator LEDs off
                 }
                 prevStore = false;
             }
@@ -168,7 +167,7 @@ uint8_t check_mode(){
         }
     } else {
         if (prevStore) {
-            for (int i = 1; i < NUM_LIGHTS + 1; i++) {
+            for (int i = 0; i < NUM_LIGHTS + 1; i++) {
                 lightingData[selectedCue][i] = values[i];
             }
         }
@@ -231,7 +230,7 @@ void loop_execute(uint8_t called_mode){
 
             // calculate values for leds
             for (int i = 1; i < NUM_FADERS; i++) {
-                values[i] = cap(faderValues[i], faderValues[0]);
+                values[i] = faderValues[i];
             }
             values[0] = faderValues[0]; // master not affected
 
@@ -246,6 +245,12 @@ void loop_execute(uint8_t called_mode){
             Serial.println("Mode 3");
             uint32_t fadeTimeElapsed;
             float step = 1.0f;
+            fadeTime = lightingData[selectedCue][0];
+            fadeTime = map(fadeTime, 0, 255, 0, 10000);
+            Serial.print("cue fade time ");
+            Serial.print(lightingData[selectedCue][0]);
+            Serial.print(" to ");
+            Serial.println(fadeTime);
 
             // calculate cue transition position
             if (bFading) {
@@ -265,13 +270,13 @@ void loop_execute(uint8_t called_mode){
             for (int i = 1; i < NUM_FADERS; i++) {
                 uint8_t v = 0;
                 if (bFading) {
+                    v = values[i] + ((lightingData[selectedCue][i] - values[i]) * step);
                     Serial.print("Channel ");
                     Serial.print(i);
                     Serial.print(" fading, ");
                     Serial.print(v);
                     Serial.print(" of ");
                     Serial.println((lightingData[selectedCue][i]));   
-                    v = values[i] + ((lightingData[selectedCue][i] - values[i]) * step);
                 } else {
                     v = lightingData[selectedCue][i];
                 }
