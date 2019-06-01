@@ -12,8 +12,6 @@
  *  - Three button surprise
  *  Functionality
  *  - overflow on fade?
- *  Pin definitions
- *  - pins as port 
  *  LEDs
  *  - duty cycle for cue leds 
  *  -- https://www.reddit.com/r/arduino/comments/5pycxp/adjusting_frequency_and_duty_cycle_of_led_blink/
@@ -62,14 +60,14 @@ void setup(){
     DDRB = DDRB | 0b10000011;
 
     // Pin Assignments - Digital Pins PWM OUTPUT
-    DDRB = DDRB | 0b10000011; 
-    DDRE = DDRE | 0b00011100;
-    DDRG = DDRG | 0b10010000;
-    DDRH = DDRH | 0b00111100;
+    DDRB = DDRB | 0b10000011; 
+    DRDE = DDRE | 0b00011100;
+    DRDG = DDRG | 0b10010000;
+    DRDH = DDRH | 0b00111100;
 
     // Pin Assignments - Digital Pins OUTPUT
     DDRA = DDRA | 0b11111111;   // CUE LEDs 1, 3, 5, 7, 9, 2, 4, 6
-    DDRC = DDRA | 0b11111111;   // LED BAR 5,6,7,8,9,10 - CUE LEDs 10, 8
+    DDRC = DDRA | 0b11111111;   // LED BAR 5,6,7,8,9,10 - CUE LEDs 10, 8
     DDRD = DDRD | 0b01000000;   // LED BAR 4
     DDRG = DDRG | 0b00000111;   // LED BAR 1,2,3
 
@@ -117,9 +115,9 @@ void read_inputs(){
     Serial.println("Reading digital inputs...");
 
     // Read Input - Digital Pins INPUT
-    store = PINB & 0b10000000;
-    back  = PINB & 0b00000010;
-    go    = PINB & 0b00000001;
+    store = PINB & STORE_PIN;
+    back  = PINB & BACK_PIN;
+    go    = PINB & GO_PIN;
 
     Serial.print("Store: "); Serial.println(store);
     Serial.print("Back: ");  Serial.println(back);
