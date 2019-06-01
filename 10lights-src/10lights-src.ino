@@ -188,8 +188,8 @@ uint8_t check_mode(){
             lastStore = timeNow;
         }
     } else {
-        if (prevStore) {
-            // record cue
+        if (prevStore && (called_mode == MODE_2)) {
+        // record cue, only in mode 2
             uint16_t address;
             for (int i = 0; i < NUM_LIGHTS + 1; i++) {
                 address = (selectedCue * NUM_FADERS) + i;
