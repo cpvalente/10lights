@@ -13,12 +13,19 @@
 #define STORE_TIME    2500
 
 /* Gen - Pins */
-#define STORE 0b10000000
-#define BACK  0b00000010
-#define GO    0b00000001
+#define STORE_PIN 0b10000000
+#define BACK_PIN  0b00000010
+#define GO_PIN    0b00000001
 
 /* Serial */
 #define SERIAL_BAUD 115200
+#ifdef DEBUG
+    #define DEBUG_PRINTLN(x)  Serial.println (x)
+    #define DEBUG_PRINT(x)    Serial.print (x)
+#else
+    #define DEBUG_PRINTLN(x)
+    #define DEBUG_PRINT(x)
+#endif
 
 /* EEPROM */
 #include <EEPROM.h>

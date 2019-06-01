@@ -8,7 +8,6 @@
  *  TODO:
  *  Gen
  *  - Modes pass values as reference
- *  - Toggle verbose
  *  - Three button surprise
  *  Functionality
  *  - overflow on fade?
@@ -60,14 +59,14 @@ void setup(){
     DDRB = DDRB | 0b10000011;
 
     // Pin Assignments - Digital Pins PWM OUTPUT
-    DDRB = DDRB | 0b10000011; 
-    DRDE = DDRE | 0b00011100;
-    DRDG = DDRG | 0b10010000;
-    DRDH = DDRH | 0b00111100;
+    DDRB = DDRB | 0b10000011; 
+    DDRE = DDRE | 0b00011100;
+    DDRG = DDRG | 0b10010000;
+    DDRH = DDRH | 0b00111100;
 
     // Pin Assignments - Digital Pins OUTPUT
     DDRA = DDRA | 0b11111111;   // CUE LEDs 1, 3, 5, 7, 9, 2, 4, 6
-    DDRC = DDRA | 0b11111111;   // LED BAR 5,6,7,8,9,10 - CUE LEDs 10, 8
+    DDRC = DDRA | 0b11111111;   // LED BAR 5,6,7,8,9,10 - CUE LEDs 10, 8
     DDRD = DDRD | 0b01000000;   // LED BAR 4
     DDRG = DDRG | 0b00000111;   // LED BAR 1,2,3
 
@@ -75,7 +74,7 @@ void setup(){
     Serial.begin(115200);
 
     // initialize data from EEPROM memory
-    Serial.print("Initializing array... ");
+    DEBUG_PRINT("Initializing array... ");
 
     uint16_t address = 0;
     for (uint8_t i = 0; i < NUM_CUES; ++i) {
@@ -84,7 +83,7 @@ void setup(){
             address++;
         }
     }
-    Serial.println("finished");
+    DEBUG_PRINTLN("finished");
 
     /* Initialize aux */
     selectedCue = 0;
@@ -102,36 +101,36 @@ void loop(){
 void read_inputs(){
     // reads declared inputs
 
-    Serial.println("Reading analog inputs...");
+    DEBUG_PRINTLN("Reading analog inputs...");
 
     // Read Input - Analog Pins
     for (int i = 0; i < NUM_FADERS; i++) {
         faderValues[i] = analogRead8(analogInputs[i]);
-        Serial.print(i);
-        Serial.print(": ");
-        Serial.println(faderValues[i]);
+        DEBUG_PRINT(i);
+        DEBUG_PRINT(": ");
+        DEBUG_PRINTLN(faderValues[i]);
     }
 
-    Serial.println("Reading digital inputs...");
+    DEBUG_PRINTLN("Reading digital inputs...");
 
     // Read Input - Digital Pins INPUT
     store = PINB & STORE_PIN;
     back  = PINB & BACK_PIN;
     go    = PINB & GO_PIN;
 
-    Serial.print("Store: "); Serial.println(store);
-    Serial.print("Back: ");  Serial.println(back);
-    Serial.print("Go: ");    Serial.println(go);
+    DEBUG_PRINT("Store: "); DEBUG_PRINTLN(store);
+    DEBUG_PRINT("Back: ");  DEBUG_PRINTLN(back);
+    DEBUG_PRINT("Go: ");    DEBUG_PRINTLN(go);
 }
 
 void write_to_leds(){
     // writes values to PWM digital
-    Serial.println("Writing to PWM outputs inputs...");
+    DEBUG_PRINTLN("Writing to PWM outputs inputs...");
     for (int i = 0; i < NUM_FADERS; i++) {
         analogWrite(digitalOutputsPWM[i], values[i]);
-        Serial.print(i);
-        Serial.print(": ");
-        Serial.println(values[i]);
+        DEBUG_PRINT(i);
+        DEBUG_PRINT(": ");
+        DEBUG_PRINTLN(values[i]);
     }
 }
 
@@ -156,7 +155,7 @@ bool clear_EPPROM(){
     for (int i = 0 ; i < EEPROM.length() ; ++i) {
         EEPROM.update(i, 0);
     }
-    Serial.println("EEPROM erased");
+    DEBUG_PRINTLN("EEPROM erased");
     return true;
 }
 
@@ -217,7 +216,7 @@ uint8_t check_mode(){
                     }
                     prevBack = prevGo = false;
                 }
-                Serial.println("Calling EEPROM clear");
+                DEBUG_PRINTLN("Calling EEPROM clear");
             }
         }
     } else {
@@ -248,8 +247,8 @@ uint8_t check_mode(){
         }
     }
 
-    Serial.print("Selected Cue: ");
-    Serial.println(selectedCue);
+    DEBUG_PRINT("Selected Cue: ");
+    DEBUG_PRINTLN(selectedCue);
 
     return called_mode;
 }
@@ -262,7 +261,7 @@ void loop_execute(uint8_t called_mode){
 
         case MODE_1:
             // Fader is value
-            Serial.println("Mode 1");
+            DEBUG_PRINTLN("Mode 1");
 
             // calculate values to pass
             for (int i = 1; i < NUM_FADERS; i++) {
@@ -273,7 +272,7 @@ void loop_execute(uint8_t called_mode){
 
         case MODE_2:
             // Record
-            Serial.println("Mode 2");
+            DEBUG_PRINTLN("Mode 2");
 
             // calculate values for leds
             for (int i = 1; i < NUM_FADERS; i++) {
@@ -289,25 +288,25 @@ void loop_execute(uint8_t called_mode){
 
         case MODE_3:
             // Playback
-            Serial.println("Mode 3");
+            DEBUG_PRINTLN("Mode 3");
             uint32_t fadeTimeElapsed;
             float step = 1.0f;
             fadeTime = lightingData[selectedCue][0];
             fadeTime = map(fadeTime, 0, 255, 0, 10000);
-            Serial.print("cue fade time ");
-            Serial.print(lightingData[selectedCue][0]);
-            Serial.print(" to ");
-            Serial.println(fadeTime);
+            DEBUG_PRINT("cue fade time ");
+            DEBUG_PRINT(lightingData[selectedCue][0]);
+            DEBUG_PRINT(" to ");
+            DEBUG_PRINTLN(fadeTime);
 
             // calculate cue transition position
             if (bFading) {
                 fadeTimeElapsed = timeNow - lastGo;
                 if (fadeTimeElapsed < fadeTime) {
                     step = ((float)fadeTimeElapsed / fadeTime);
-                    Serial.print("Fade time ");
-                    Serial.print(fadeTimeElapsed);
-                    Serial.print(" completed ");
-                    Serial.println(step);
+                    DEBUG_PRINT("Fade time ");
+                    DEBUG_PRINT(fadeTimeElapsed);
+                    DEBUG_PRINT(" completed ");
+                    DEBUG_PRINTLN(step);
                 } else {
                     bFading = false;
                 }
@@ -319,14 +318,14 @@ void loop_execute(uint8_t called_mode){
                 uint8_t target = cap(lightingData[selectedCue][i], faderValues[0]);
                 if (bFading) {
                     v = values[i] + ((target - values[i]) * step);
-                    Serial.print("Channel ");
-                    Serial.print(i);
-                    Serial.print(" Currently at ");
-                    Serial.print(lightingData[selectedCue][i]);
-                    Serial.print(" fading step: ");
-                    Serial.print(v);
-                    Serial.print(" of target ");
-                    Serial.println((lightingData[selectedCue][i]));
+                    DEBUG_PRINT("Channel ");
+                    DEBUG_PRINT(i);
+                    DEBUG_PRINT(" Currently at ");
+                    DEBUG_PRINT(lightingData[selectedCue][i]);
+                    DEBUG_PRINT(" fading step: ");
+                    DEBUG_PRINT(v);
+                    DEBUG_PRINT(" of target ");
+                    DEBUG_PRINTLN((lightingData[selectedCue][i]));
                 } else {
                     v = target;
                 }
