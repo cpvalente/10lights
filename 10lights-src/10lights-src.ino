@@ -12,7 +12,6 @@
  *  - Three button surprise
  *  Functionality
  *  - overflow on fade?
- *  - read / write to EEPROM
  *  Pin definitions
  *  - pins as port 
  *  LEDs
@@ -28,7 +27,7 @@ enum states {MODE_1, MODE_2, MODE_3};
 uint8_t state = MODE_1;
 
 /* Gen - Lighting States */
-uint8_t lightingData[NUM_CUES][NUM_LIGHTS + 1] = {0};   // numLights + cue fade time
+uint8_t lightingData[NUM_CUES][NUM_FADERS];
 uint8_t selectedCue;
 uint32_t fadeTime;
 bool bFading = false;
@@ -84,8 +83,16 @@ void setup(){
     // Serial setup
     Serial.begin(115200);
 
+    // initialize data from EEPROM memory
     Serial.print("Initializing array... ");
-    // will be replaced with EEPROM read
+
+    uint16_t address = 0;
+    for (uint8_t i = 0; i < NUM_CUES; ++i) {
+        for (uint8_t j = 0; j < NUM_FADERS; ++j) {
+            lightingData[i][j] = read_from_EEPROM(address + EEPROM_ADDRESS);
+            address++;
+        }
+    }
     Serial.println("finished");
 
     /* Initialize aux */
@@ -144,6 +151,24 @@ void write_to_indicators(){
     }
 }
 
+inline uint8_t read_from_EEPROM(uint16_t address){
+    // returns byte from EEPROM at address
+    return EEPROM.read(address);
+}
+
+inline void write_to_EEPROM(uint8_t b, uint16_t address){
+    // write single byte to EEMPROM at address
+    EEPROM.update(address, b);  
+}
+
+bool clear_EPPROM(){
+    for (int i = 0 ; i < EEPROM.length() ; ++i) {
+        EEPROM.update(i, 0);
+    }
+    Serial.println("EEPROM erased");
+    return true;
+}
+
 uint8_t check_mode(){
     // reads mode selection input
     uint8_t called_mode = state;
@@ -158,6 +183,12 @@ uint8_t check_mode(){
                 else {
                     called_mode = MODE_1;
                     memset(leds, 0, sizeof(NUM_CUES));      // all indicator LEDs off
+                    // clear ram
+                    for (uint8_t i = 0; i < NUM_CUES; ++i) {
+                        for (uint8_t j = 0; j < NUM_FADERS; ++j) {
+                            lightingData[i][j] = 0;
+                        }
+                    }
                 }
                 prevStore = false;
             }
@@ -167,15 +198,40 @@ uint8_t check_mode(){
         }
     } else {
         if (prevStore) {
+            // record cue
+            uint16_t address;
             for (int i = 0; i < NUM_LIGHTS + 1; i++) {
+                address = (selectedCue * NUM_FADERS) + i;
                 lightingData[selectedCue][i] = values[i];
+                // write data to EEPROM
+                write_to_EEPROM(values[i], address + EEPROM_ADDRESS);
             }
         }
         prevStore = false;
     } 
 
-    // go and go backwards only work on mode 2 and 3
-    if (called_mode != MODE_1) {
+    if (called_mode == MODE_1) {
+        // delete only in mode 1
+        if (back && go) { 
+            if (!prevGo && !prevBack) {
+                lastGo = lastBack = timeNow;
+            } else {
+                if ((timeNow - lastGo > STORE_TIME) && (timeNow - lastBack > STORE_TIME)) {
+                    clear_EPPROM();
+                    // memset(lightingData, 0, (NUM_LIGHTS * NUM_CUES) * (sizeof *lightingData));
+                    for (uint8_t i = 0; i < NUM_CUES; ++i) {
+                        for (uint8_t j = 0; j < NUM_FADERS; ++j) {
+                            lightingData[i][j] = 0;
+                        }
+                    }
+                    prevBack = prevGo = false;
+                }
+                Serial.println("Calling EEPROM clear");
+            }
+        }
+    } else {
+        // go and go backwards only work on mode 2 and 3
+        
         // go backwards
         if (back && !prevBack) { 
             selectedCue -= 1;
@@ -269,20 +325,22 @@ void loop_execute(uint8_t called_mode){
             // calculate values to pass
             for (int i = 1; i < NUM_FADERS; i++) {
                 uint8_t v = 0;
+                uint8_t target = cap(lightingData[selectedCue][i], faderValues[0]);
                 if (bFading) {
-                    v = values[i] + ((lightingData[selectedCue][i] - values[i]) * step);
+                    v = values[i] + ((target - values[i]) * step);
                     Serial.print("Channel ");
                     Serial.print(i);
-                    Serial.print(" fading, ");
+                    Serial.print(" Currently at ");
+                    Serial.print(lightingData[selectedCue][i]);
+                    Serial.print(" fading step: ");
                     Serial.print(v);
-                    Serial.print(" of ");
-                    Serial.println((lightingData[selectedCue][i]));   
+                    Serial.print(" of target ");
+                    Serial.println((lightingData[selectedCue][i]));
                 } else {
-                    v = lightingData[selectedCue][i];
+                    v = target;
                 }
-                values[i] = cap( largest(v, faderValues[i]) , faderValues[0] );
-            }
-
+                values[i] = largest(v , cap(faderValues[i], faderValues[0] ) );
+            } 
             values[0] = faderValues[0]; // master not affected
 
             // calculate values for indicator LEDs

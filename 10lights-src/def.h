@@ -14,9 +14,10 @@
 #define SERIAL_BAUD 115200
 
 /* EEPROM */
-#include <Wire.h>
-#define disk1 0x50          // !! check for mega
-#define EEPROM_ADDRESS 0
+#include <EEPROM.h>
+#define EEPROM_ADDRESS      0
+#define EEPROM_MEM_SIZE     4096    // using EEPROM.length() instead
+#define EEPROM_USED_MEM     
 
 /* Project */
 #define NUM_LIGHTS 10
