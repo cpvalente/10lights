@@ -2,13 +2,20 @@
 #define DEF_H
 
 /* Gen */
+#include "libs/digitalfast.h"
+#include "libs/analogfast.h"
 #include "utils.h"
-#define BYTE_INV 0.003921568627
+#define BYTE_COEF 0.003921568627
 
 /* Gen - SW Debounce */
 #define DEBOUNCE_TIME 50
 #define WARM_UP_TIME  500
 #define STORE_TIME    2500
+
+/* Gen - Pins */
+#define STORE 0b10000000
+#define BACK  0b00000010
+#define GO    0b00000001
 
 /* Serial */
 #define SERIAL_BAUD 115200

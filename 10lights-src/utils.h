@@ -1,5 +1,5 @@
 inline uint8_t analogRead8(uint8_t pin){
-    return (analogRead(pin) >> 2);
+    return (analogReadFast(pin) >> 2);
 }
 
 inline uint8_t cap(uint8_t value, uint8_t master){
