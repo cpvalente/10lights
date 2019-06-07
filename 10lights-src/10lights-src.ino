@@ -7,17 +7,20 @@
  *  
  *  TODO:
  *  Gen
- *  - Modes pass values as reference
  *  - Three button surprise
+ *  - debug modes: verbose
+ *  - debug modes: plotter
  *  Functionality
  *  - overflow on fade?
- *  - filters on input
+ *  INPUT
+ *  - ADC prescaler
  *  LEDs
  *  - duty cycle for cue leds 
  *  -- https://www.reddit.com/r/arduino/comments/5pycxp/adjusting_frequency_and_duty_cycle_of_led_blink/
  *  - indicator LEDs to flash according to mode select 
  */
  
+#define DEBUG
 #include "def.h"
 
 /* Gen - State Machine */
@@ -164,7 +167,10 @@ uint8_t check_mode(){
 void loop_execute(uint8_t called_mode){
 
     if (called_mode < 3) state = called_mode;
-    DEBUG_PRINTLN(states[state]);
+
+    DEBUG_PRINT("Mode: ");
+    DEBUG_PRINTLN(state);
+
     switch (state) {
 
         case MODE_1:        // Fader is value
@@ -244,7 +250,7 @@ void called_actions() {
         DEBUG_PRINTLN("Recording cue..");
 
         uint16_t address;
-        for (int i = 0; i < NUM_LIGHTS + 1; i++) {
+        for (int i = 0; i < NUM_FADERS; ++i) {
             // write to running memory
             lightingData[selectedCue][i] = values[i];
             // write data to EEPROM
