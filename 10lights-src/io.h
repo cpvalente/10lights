@@ -28,7 +28,7 @@ void read_inputs(){
 
     // Read Input - Analog Pins
     for (int i = 0; i < NUM_FADERS; i++) {
-        faderValues[i] = analogRead8(analogInputs[i]);
+        faderValues[i] = ema(values[i], analogRead8(analogInputs[i]), LOW_PASS);
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
         DEBUG_PRINTLN(faderValues[i]);
@@ -70,11 +70,7 @@ void write_to_indicators(){
 
 void flash_indicators() {
     // flash indicator LEDs
-    for (uint8_t i = 0; i < NUM_CUES; ++i) {
-        for (uint8_t j = 0; j < NUM_FADERS; ++j) {
-            lightingData[i][j] = 255;
-        }
-    }
+    memset(leds, 255, sizeof(leds));
 }
 
 void led_from_selected_cue(){
