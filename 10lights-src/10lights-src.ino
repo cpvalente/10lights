@@ -9,7 +9,6 @@
  *  Gen
  *  - Three button surprise
  *  - debug modes: verbose
- *  - debug modes: plotter
  *  Functionality
  *  - overflow on fade?
  *  INPUT
@@ -20,7 +19,6 @@
  *  - indicator LEDs to flash according to mode select 
  */
  
-#define DEBUG
 #include "def.h"
 
 /* Gen - State Machine */
@@ -85,6 +83,7 @@ void loop(){
     bClearRunningData   = false;
     bRecordCue          = false;
 
+    DEBUG_PLOT("\n");
     delay(20);
 }
 
@@ -169,7 +168,7 @@ void loop_execute(uint8_t called_mode){
     if (called_mode < 3) state = called_mode;
 
     DEBUG_PRINT("Mode: ");
-    DEBUG_PRINTLN(state);
+    DEBUG_PRINTLN(state + 1);
 
     switch (state) {
 

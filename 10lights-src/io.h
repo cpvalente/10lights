@@ -32,6 +32,9 @@ void read_inputs(){
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
         DEBUG_PRINTLN(faderValues[i]);
+
+        DEBUG_PLOT(faderValues[i]);
+        DEBUG_PLOT("\t");
     }
 
     DEBUG_PRINTLN("Reading digital inputs...");
@@ -54,6 +57,9 @@ void write_to_leds(){
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
         DEBUG_PRINTLN(values[i]);
+
+        DEBUG_PLOT(values[i]);
+        DEBUG_PLOT("\t");
     }
 }
 
