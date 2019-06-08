@@ -9,6 +9,7 @@
 
 #define LOW_PASS        0.65
 #define HIGH_PASS       0.3
+#define VERY_HIGH_PASS  0.1
 
 /* Serial */
 #define SERIAL_BAUD 115200
@@ -37,6 +38,10 @@
 #define BACK_PIN    0b00000010
 #define GO_PIN      0b00000001
 
+/* Gen - Timings */
+#define UI_SLOW     500
+#define UI_BLINK    200
+
 /* EEPROM */
 #include <EEPROM.h>
 #define EEPROM_ADDRESS      0
@@ -57,6 +62,5 @@ const uint8_t digitalInputs[]     {13, 52, 53};                                 
 const uint8_t mode_select[]       {19, 20, 21};                                  // mode indicator (1-3)
 const uint8_t time_indicator[]    {41, 40, 39, 38, 37, 36, 35, 34, 33, 32};      // time indicator LED-bargraph, first is segment 1
 const uint8_t hlt_button[]        {43, 45, 47, 49, 51, 50, 48, 46, 44, 42};      // buttons for channel highlighting, first is CH1
-
-
+ 
 #endif
