@@ -26,7 +26,7 @@ void read_inputs(){
 
     DEBUG_PRINTLN("Reading analog inputs...");
 
-    // Read Input - Analog Pins
+    /* Read Input - Analog Pins */
     for (int i = 0; i < NUM_FADERS; i++) {
         faderValues[i] = ema(values[i], analogRead8(analogInputs[i]), VERY_HIGH_PASS);
         DEBUG_PRINT(i);
@@ -39,14 +39,18 @@ void read_inputs(){
 
     DEBUG_PRINTLN("Reading digital inputs...");
 
-    // Read Input - Digital Pins INPUT
-    store = PINB & STORE_PIN;
-    back  = PINB & BACK_PIN;
-    go    = PINB & GO_PIN;
+    if (timeNow - lastBtnRead > DEBOUNCE_TIME) {
+        /* Read Input - Digital Pins INPUT */
+        store = PINB & STORE_PIN;
+        back  = PINB & BACK_PIN;
+        go    = PINB & GO_PIN;
 
-    DEBUG_PRINT("Store: "); DEBUG_PRINTLN(store);
-    DEBUG_PRINT("Back: ");  DEBUG_PRINTLN(back);
-    DEBUG_PRINT("Go: ");    DEBUG_PRINTLN(go);
+        DEBUG_PRINT("Store: "); DEBUG_PRINTLN(store);
+        DEBUG_PRINT("Back: ");  DEBUG_PRINTLN(back);
+        DEBUG_PRINT("Go: ");    DEBUG_PRINTLN(go);
+        
+        lastBtnRead = timeNow;  // reset timer
+    }
 }
 
 void write_to_leds(){

@@ -11,11 +11,12 @@
  *  - debug modes: verbose
  *  Functionality
  *  - overflow on fade?
+ *  - Some sort of erase memory confirmation, like some LEDs flash or someting
+ *  - the LED bargraph thingy indicating time
+ *  - the highlight button
  *  INPUT
  *  - ADC prescaler
  *  LEDs
- *  - duty cycle for cue leds 
- *  -- https://www.reddit.com/r/arduino/comments/5pycxp/adjusting_frequency_and_duty_cycle_of_led_blink/
  *  - indicator LEDs to flash according to mode select 
  */
  
@@ -24,21 +25,22 @@
 /* Gen - State Machine */
 enum states {MODE_1, MODE_2, MODE_3};
 uint8_t state = MODE_1;
+uint32_t timeNow, lastBtnRead;
 
 /* Gen - Lighting States */
 uint8_t lightingData[NUM_CUES][NUM_FADERS];
 uint8_t selectedCue;
 uint32_t fadeTime;
-bool bFading = false;               // initiate fade
-bool bRecordCue = false;            // record fader data in cue
-bool bClearEEPROM = false;          // reset EEPROM data
-bool bClearRunningData = false;     // clear running data
-bool bClearIndicators = false;      // clear indicator LEDs
+bool bFading;               // initiate fade
+bool bRecordCue;            // record fader data in cue
+bool bClearEEPROM;          // reset EEPROM data
+bool bClearRunningData;     // clear running data
+bool bClearIndicators;      // clear indicator LEDs
 
 /* Gen - Pin Values Buttons */
 bool store, back, go;
 bool prevStore, prevBack, prevGo;
-uint32_t lastStore, lastBack, lastGo, timeNow;
+uint32_t lastStore, lastBack, lastGo;
 
 /* Gen - Pin Values Faders */
 uint8_t faderValues[NUM_FADERS];     // values from faders at each iteration
@@ -62,6 +64,8 @@ void setup(){
 
     /* Initialize aux */
     selectedCue = 0;
+    bRecordCue = bClearEEPROM = bClearRunningData = bClearIndicators = false;
+    lastBtnRead = 0;
 }
 
 void loop(){
@@ -69,22 +73,21 @@ void loop(){
     read_inputs();                  // this should only happen if needed
     loop_execute( check_mode() );   // call state machine
     called_actions();               // run user actions
-    write_to_leds();                // write outputs
-    write_to_indicators();          // write to UI LEDs
+    refresh_outputs();              // refresh LEDs
 
-    // iterate flags
+    /* iterate flags */
     prevGo      = go;
     prevBack    = back;
     prevStore   = store;
 
-    // reset flags
+    /* reset flags */
     bClearIndicators    = false;
     bClearEEPROM        = false;
     bClearRunningData   = false;
     bRecordCue          = false;
 
+    /* aux */
     DEBUG_PLOT("\n");
-    delay(20);
 }
 
 uint8_t check_mode(){
@@ -98,11 +101,11 @@ uint8_t check_mode(){
         if (prevStore) {
             // Store button was pressed in previous iteration
             if (timeNow - lastStore > ACTION_TIME) {
-                // Store button has been pressed long enough to call action
-                // cycle mode and reset flag
-                called_mode = (called_mode + 1) % NUM_MODES;
-                bClearIndicators = true;
-                store = false;
+                /* Store button has been pressed long enough to call action,
+                 * Enter cycle Mode */
+                if (go) called_mode++;
+                if (back) called_mode--;
+                if (called_mode >= NUM_MODES) called_mode = 0;
             }
         } else {
             // start counter
@@ -127,10 +130,11 @@ uint8_t check_mode(){
                     // if both buttons where pressed for ACTION TIME we call clear
                     bClearEEPROM = true;
                     bClearRunningData = true;
+                    // give visual feedback
+                    flash_indicators();
                     // and reset flags
                     back = go = false;
                 }
-                DEBUG_PRINTLN("counting to call clear");
             }
         }
     } else {
@@ -275,4 +279,10 @@ void called_actions() {
         // clear indicators from previous mode
         memset(leds, 0, sizeof(leds));                 // all indicator LEDs off
     }
+}
+
+void refresh_outputs() {
+    /* Refresh LED outptus */
+    write_to_leds();                // write outputs
+    write_to_indicators();     // write to indicator LEDs
 }
