@@ -28,14 +28,14 @@ void read_inputs(){
 
     // Read Input - Analog Pins
     for (int i = 0; i < NUM_FADERS; i++) {
-        faderValues[i] = ema(values[i], analogRead8(analogInputs[i]), LOW_PASS);
+        faderValues[i] = ema(values[i], analogRead8(analogInputs[i]), VERY_HIGH_PASS);
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
         DEBUG_PRINTLN(faderValues[i]);
 
         DEBUG_PLOT(faderValues[i]);
         DEBUG_PLOT("\t");
-    }
+    }  
 
     DEBUG_PRINTLN("Reading digital inputs...");
 
