@@ -16,7 +16,7 @@ void init_io() {
     // Pin Assignments - Digital Pins OUTPUT
     DDRA = DDRA | 0b11111111;   // CUE LEDs 1, 3, 5, 7, 9, 2, 4, 6
     DDRC = DDRA | 0b11111111;   // LED BAR 5,6,7,8,9,10, CUE LEDs 10, 8
-    DDRD = DDRD | 0b01000111;   // LED BAR 4 , MODE 1 LED, MODE 2 LED, MODE 3 LED
+    DDRD = DDRD | 0b10000111;   // LED BAR 4 , MODE 1 LED, MODE 2 LED, MODE 3 LED
     DDRG = DDRG | 0b00000111;   // LED BAR 1,2,3
 
 }
