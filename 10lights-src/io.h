@@ -106,9 +106,9 @@ inline void fade(uint8_t led, int time) {
     }
 }
 
-inline void led_from_selected_cue(){
+inline void led_from_selected_cue(uint8_t selected){
     for (int i = 0; i < NUM_CUES; ++i) {
-        leds[i] = (selectedCue == i);
+        (i <= selected) ? (leds[i] = 255) : (timerLeds[i] = 0);   
     }
 }
 
@@ -132,4 +132,3 @@ inline void leds_from_value(uint8_t time){
         (i <= led_on) ? (timerLeds[i] = 255) : (timerLeds[i] = 0);   
     }
 }
-

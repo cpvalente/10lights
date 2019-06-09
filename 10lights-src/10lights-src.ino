@@ -54,7 +54,7 @@ void setup(){
     init_io();
  
     /* Serial */
-    Serial.begin(115200);
+    Serial.begin(SERIAL_BAUD);
 
     /* initialize data from EEPROM memory */
     init_from_eeprom(EEPROM_ADDRESS);
@@ -135,6 +135,7 @@ uint8_t check_mode(){
                 if (back & !prevBack)           called_mode --;
                 if (called_mode >= NUM_MODES)   called_mode = NUM_MODES - 1;
                 bClearIndicators = true;
+                selectedCue = 0;
                 return called_mode;
             }
         } else {
@@ -224,7 +225,7 @@ void loop_execute(uint8_t called_mode){
             values[0] = faderValues[0]; // master not affected
 
             // calculate values for indicator LEDs
-            led_from_selected_cue();
+            led_from_selected_cue(selectedCue);
 
             // calculate values for time indicator LEDs
             leds_from_value(values[0]);
@@ -277,7 +278,7 @@ void loop_execute(uint8_t called_mode){
             values[0] = faderValues[0]; // master not affected
 
             // calculate values for indicator LEDs
-            led_from_selected_cue();
+            led_from_selected_cue(selectedCue);
         break;
     }
 }
