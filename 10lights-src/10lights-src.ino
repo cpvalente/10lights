@@ -7,16 +7,11 @@
  *  
  *  TODO:
  *  Gen
- *  - Three button surprise
  *  - debug modes: verbose
  *  Functionality
- *  - overflow on fade?
- *  - the LED bargraph thingy indicating time
  *  - the highlight button
  *  INPUT
  *  - ADC prescaler
- *  LEDs
- *  - indicator LEDs to flash according to mode select 
  */
  
 #include "def.h"
@@ -36,6 +31,7 @@ bool bRecordCue;            // record fader data in cue
 bool bClearEEPROM;          // reset EEPROM data
 bool bClearRunningData;     // clear running data
 bool bClearIndicators;      // clear indicator LEDs
+bool bClearTimer;           // clear timing indicator LEDs
 
 /* Gen - Pin Values Buttons */
 bool store, back, go;
@@ -46,6 +42,7 @@ uint32_t lastStore, lastBack, lastGo;
 uint8_t faderValues[NUM_FADERS];     // values from faders at each iteration
 uint8_t values[NUM_FADERS];          // values for output
 uint8_t leds[NUM_CUES];              // values for indicator leds
+uint8_t timerLeds[NUM_TIMER];        // values for timing indicators
 
 /* Include code files */
 #include "io.h"
@@ -65,7 +62,8 @@ void setup(){
     /* Initialize aux */
     selectedCue = 0;
 
-    bRecordCue = bClearEEPROM = bClearRunningData = bClearIndicators = false;
+    bRecordCue = bClearEEPROM = bClearRunningData = false;
+    bClearIndicators = bClearTimer = false;
     bInitSequence = true;
 
     lastBtnRead = 0;
@@ -102,20 +100,20 @@ void init_sequence(int time){
      * all pins by hand, set visually  */
 
     // cue indicators
-    uint8_t pinOrder1[10] = {22,27,23,28,24,31,26,30,25,29};
-    for (int i = 0; i < 10; ++i) {
+    uint8_t pinOrder1[NUM_CUES] = {22,27,23,28,24,31,26,30,25,29};
+    for (int i = 0; i < NUM_CUES; ++i) {
         blink(pinOrder1[i], time);
     }
 
     // PWM lights
-    uint8_t pinOrder2[11] = {2,3,4,5,6,7,8,9,10,11,12};
-    for (int i = 0; i < 11; ++i) {
+    uint8_t pinOrder2[NUM_FADERS] = {2,3,4,5,6,7,8,9,10,11,12};
+    for (int i = 0; i < NUM_FADERS; ++i) {
         fade(pinOrder2[i], time);
     }
 
     // mode and timing indicators
-    uint8_t pinOrder3[13] = {19,20,21,41,40,39,38,37,36,35,34,33,32};
-    for (int i = 0; i < 13; ++i) {
+    uint8_t pinOrder3[NUM_MODES + NUM_TIMER] = {19,20,21,41,40,39,38,37,36,35,34,33,32};
+    for (int i = 0; i < NUM_MODES + NUM_TIMER; ++i) {
         blink(pinOrder3[i], time);
     }
 }
@@ -213,6 +211,9 @@ void loop_execute(uint8_t called_mode){
             }
             values[0] = faderValues[0]; // master not affected
 
+            // calculate values for time indicator LEDs
+            leds_from_value(values[0]);
+
         break;
 
         case MODE_2:        // Record
@@ -224,6 +225,10 @@ void loop_execute(uint8_t called_mode){
 
             // calculate values for indicator LEDs
             led_from_selected_cue();
+
+            // calculate values for time indicator LEDs
+            leds_from_value(values[0]);
+
         break;
 
         case MODE_3:        // Playback
@@ -242,8 +247,9 @@ void loop_execute(uint8_t called_mode){
             if (bFading) {      // this should be replaced with proper maths
                 fadeTimeElapsed = timeNow - lastGo;
                 if (fadeTimeElapsed < fadeTime) {
+                    leds_from_time_delta(fadeTimeElapsed, fadeTime);
                     step = ((float)fadeTimeElapsed / fadeTime);
-                    DEBUG_PRINT("Fade  ");
+                    DEBUG_PRINT("Fade ");
                     DEBUG_PRINT(step);
                     DEBUG_PRINTLN(" completed ");
                 } else {
@@ -310,6 +316,10 @@ void called_actions() {
     if (bClearIndicators) {
         // clear indicators from previous mode
         memset(leds, 0, sizeof(leds));                 // all indicator LEDs off
+    }
+    if (bClearTimer) {
+        // clear indicators from previous mode
+        memset(timerLeds, 0, sizeof(timerLeds));       // all timer LEDS off
     }
 }
 

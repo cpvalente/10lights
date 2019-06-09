@@ -73,8 +73,12 @@ inline void write_to_indicators(){
         digitalWriteFast(digitalOutputs[i], leds[i]);
     }
     // write to mode indicator LEDs
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < NUM_MODES; ++i) {
         digitalWriteFast(mode_select[i], state == i);
+    }
+    // write to time indicator LEDs
+    for (int i = 0; i < NUM_CUES; ++i) {
+        digitalWriteFast(time_indicator[i], timerLeds[i]);
     }
 }
 
@@ -107,3 +111,25 @@ inline void led_from_selected_cue(){
         leds[i] = (selectedCue == i);
     }
 }
+
+inline void leds_from_time_delta(uint32_t time, uint32_t totalTime){
+    uint8_t led_on = map(time, 0, totalTime, 0, 10);
+    for (int i = 0; i < NUM_LIGHTS; ++i) {
+        (i <= led_on) ? (timerLeds[i] = 255) : (timerLeds[i] = 0);   
+    }
+}
+
+inline void leds_from_time(uint32_t time){
+    uint8_t led_on = map(time, 0, MAX_FADE, 0, 10);
+    for (int i = 0; i < NUM_LIGHTS; ++i) {
+        (i <= led_on) ? (timerLeds[i] = 255) : (timerLeds[i] = 0);   
+    }
+}
+
+inline void leds_from_value(uint8_t time){
+    uint8_t led_on = map(time, 0, 255, 0, 10);
+    for (int i = 0; i < NUM_LIGHTS; ++i) {
+        (i <= led_on) ? (timerLeds[i] = 255) : (timerLeds[i] = 0);   
+    }
+}
+

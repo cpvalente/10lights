@@ -52,6 +52,7 @@
 #define NUM_FADERS 11
 #define NUM_CUES   10
 #define NUM_MODES  3
+#define NUM_TIMER  10
 #define MAX_FADE   10000
 
 /* Pin Assignment */
