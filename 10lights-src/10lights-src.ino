@@ -115,7 +115,7 @@ void init_sequence(int time){
 
     // mode and timing indicators
     uint8_t pinOrder3[13] = {19,20,21,41,40,39,38,37,36,35,34,33,32};
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 13; ++i) {
         blink(pinOrder3[i], time);
     }
 }
@@ -162,8 +162,6 @@ uint8_t check_mode(){
                     // if both buttons where pressed for ACTION TIME we call clear
                     bClearEEPROM = true;
                     bClearRunningData = true;
-                    // give visual feedback
-                    init_sequence(UI_BLINK);
                     // and reset flags
                     back = go = false;
                 }
@@ -298,6 +296,7 @@ void called_actions() {
     if (bClearEEPROM) { 
         DEBUG_PRINTLN("Calling EEPROM clear..");
         clear_eeprom();
+        // give visual feedback
         init_sequence(UI_BLINK);
     }
 
