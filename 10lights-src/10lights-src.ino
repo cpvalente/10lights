@@ -11,7 +11,6 @@
  *  - debug modes: verbose
  *  Functionality
  *  - overflow on fade?
- *  - Some sort of erase memory confirmation, like some LEDs flash or someting
  *  - the LED bargraph thingy indicating time
  *  - the highlight button
  *  INPUT
@@ -26,6 +25,7 @@
 enum states {MODE_1, MODE_2, MODE_3};
 uint8_t state = MODE_1;
 uint32_t timeNow, lastBtnRead;
+bool bInitSequence;
 
 /* Gen - Lighting States */
 uint8_t lightingData[NUM_CUES][NUM_FADERS];
@@ -64,11 +64,17 @@ void setup(){
 
     /* Initialize aux */
     selectedCue = 0;
+
     bRecordCue = bClearEEPROM = bClearRunningData = bClearIndicators = false;
+    bInitSequence = true;
+
     lastBtnRead = 0;
 }
 
 void loop(){
+    if (bInitSequence) 
+        init_sequence(UI_SLOW);            // init sequence on startup
+
     timeNow = millis();             // get iteration time
     read_inputs();                  // this should only happen if needed
     loop_execute( check_mode() );   // call state machine
@@ -85,13 +91,37 @@ void loop(){
     bClearEEPROM        = false;
     bClearRunningData   = false;
     bRecordCue          = false;
+    bInitSequence       = false;
 
     /* aux */
     DEBUG_PLOT("\n");
 }
 
+void init_sequence(int time){
+    /* on init all leds flash in order 
+     * all pins by hand, set visually  */
+
+    // cue indicators
+    uint8_t pinOrder1[10] = {22,27,23,28,24,31,26,30,25,29};
+    for (int i = 0; i < 10; ++i) {
+        blink(pinOrder1[i], time);
+    }
+
+    // PWM lights
+    uint8_t pinOrder2[11] = {2,3,4,5,6,7,8,9,10,11,12};
+    for (int i = 0; i < 11; ++i) {
+        fade(pinOrder2[i], time);
+    }
+
+    // mode and timing indicators
+    uint8_t pinOrder3[13] = {19,20,21,41,40,39,38,37,36,35,34,33,32};
+    for (int i = 0; i < 10; ++i) {
+        blink(pinOrder3[i], time);
+    }
+}
+
 uint8_t check_mode(){
-    // reads mode selection input
+    /* reads mode selection input */
     uint8_t called_mode = state;
     bool bStartFade = false;
 
@@ -103,9 +133,11 @@ uint8_t check_mode(){
             if (timeNow - lastStore > ACTION_TIME) {
                 /* Store button has been pressed long enough to call action,
                  * Enter cycle Mode */
-                if (go) called_mode++;
-                if (back) called_mode--;
-                if (called_mode >= NUM_MODES) called_mode = 0;
+                if (go & !prevGo)               called_mode = (called_mode + 1) % NUM_MODES;
+                if (back & !prevBack)           called_mode --;
+                if (called_mode >= NUM_MODES)   called_mode = NUM_MODES - 1;
+                bClearIndicators = true;
+                return called_mode;
             }
         } else {
             // start counter
@@ -131,7 +163,7 @@ uint8_t check_mode(){
                     bClearEEPROM = true;
                     bClearRunningData = true;
                     // give visual feedback
-                    flash_indicators();
+                    init_sequence(UI_BLINK);
                     // and reset flags
                     back = go = false;
                 }
@@ -248,33 +280,34 @@ void loop_execute(uint8_t called_mode){
 
 void called_actions() {
 
-    // record cue called
+    /* record cue called */
     if (bRecordCue) {
         DEBUG_PRINTLN("Recording cue..");
 
-        uint16_t address;
+        uint16_t address = EEPROM_ADDRESS + (selectedCue * NUM_FADERS) ;
         for (int i = 0; i < NUM_FADERS; ++i) {
             // write to running memory
             lightingData[selectedCue][i] = values[i];
             // write data to EEPROM
-            address = (selectedCue * NUM_FADERS) + i;
-            write_to_eeprom(values[i], address + EEPROM_ADDRESS);
+            write_to_eeprom(values[i], address);
+            address++;
         }
     }
 
-    // reset EEPROM
+    /* reset EEPROM */
     if (bClearEEPROM) { 
         DEBUG_PRINTLN("Calling EEPROM clear..");
         clear_eeprom();
+        init_sequence(UI_BLINK);
     }
 
-    // clear running data called
+    /* clear running data called */
     if (bClearRunningData) {
         DEBUG_PRINTLN("Clearing running data..");
         memset(lightingData, 0, sizeof(lightingData));  // clear running data
     }
 
-    // clear indicators called
+    /* clear indicators called */
     if (bClearIndicators) {
         // clear indicators from previous mode
         memset(leds, 0, sizeof(leds));                 // all indicator LEDs off
@@ -283,6 +316,6 @@ void called_actions() {
 
 void refresh_outputs() {
     /* Refresh LED outptus */
-    write_to_leds();                // write outputs
+    write_to_leds();           // write outputs
     write_to_indicators();     // write to indicator LEDs
 }

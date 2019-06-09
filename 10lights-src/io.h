@@ -27,7 +27,7 @@ void read_inputs(){
     DEBUG_PRINTLN("Reading analog inputs...");
 
     /* Read Input - Analog Pins */
-    for (int i = 0; i < NUM_FADERS; i++) {
+    for (int i = 0; i < NUM_FADERS; ++i) {
         faderValues[i] = ema(values[i], analogRead8(analogInputs[i]), VERY_HIGH_PASS);
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
@@ -56,7 +56,7 @@ void read_inputs(){
 void write_to_leds(){
     // writes values to PWM digital
     DEBUG_PRINTLN("Writing to PWM outputs inputs...");
-    for (int i = 0; i < NUM_FADERS; i++) {
+    for (int i = 0; i < NUM_FADERS; ++i) {
         analogWrite(digitalOutputsPWM[i], values[i]);
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
@@ -67,24 +67,43 @@ void write_to_leds(){
     }
 }
 
-void write_to_indicators(){
+inline void write_to_indicators(){
     // write to lighting cue indicator LEDs
-    for (int i = 0; i < NUM_CUES; i++) {
+    for (int i = 0; i < NUM_CUES; ++i) {
         digitalWriteFast(digitalOutputs[i], leds[i]);
     }
     // write to mode indicator LEDs
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; ++i) {
         digitalWriteFast(mode_select[i], state == i);
     }
 }
 
-void flash_indicators() {
+inline void flash_indicators() {
     // flash indicator LEDs
     memset(leds, 255, sizeof(leds));
 }
 
-void led_from_selected_cue(){
-    for (int i = 0; i < NUM_CUES; i++) {
+inline void blink(uint8_t led, int time) {
+    // flash led for time
+    digitalWriteFast(led, HIGH);
+    delay(time);
+    digitalWriteFast(led, LOW);
+}
+
+inline void fade(uint8_t led, int time) {
+    // fade led in and out in time
+    for (int i = 0; i < 255; ++i) {
+        analogWrite(led, i);
+        delay (time / 255);
+    }
+    for (int i = 255; i > 0; --i) {
+        analogWrite(led, i);
+        delay (time / 255);
+    }
+}
+
+inline void led_from_selected_cue(){
+    for (int i = 0; i < NUM_CUES; ++i) {
         leds[i] = (selectedCue == i);
     }
 }
