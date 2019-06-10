@@ -39,7 +39,7 @@
 #define GO_PIN      0b00000001
 
 /* Gen - Timings */
-#define UI_SLOW     500
+#define UI_SLOW     250
 #define UI_BLINK    200
 
 /* EEPROM */
