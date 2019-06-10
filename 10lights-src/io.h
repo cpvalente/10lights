@@ -21,6 +21,12 @@ void init_io() {
 
 }
 
+void init_UILed() {
+  for (int i = 0; i < NUM_CUES; ++i) {
+        cueLeds[i].init(cueIndicator[i]);
+    }
+}
+
 void read_inputs(){
     // reads declared inputs
 
@@ -31,11 +37,13 @@ void read_inputs(){
         faderValues[i] = ema(values[i], analogRead8(analogInputs[i]), VERY_HIGH_PASS);
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
-        DEBUG_PRINTLN(faderValues[i]);
+        DEBUG_PRINT(faderValues[i]);
+        DEBUG_PRINT("\t");
 
         DEBUG_PLOT(faderValues[i]);
         DEBUG_PLOT("\t");
-    }  
+    }
+    DEBUG_PRINT("\n");
 
     DEBUG_PRINTLN("Reading digital inputs...");
 
@@ -48,8 +56,10 @@ void read_inputs(){
         DEBUG_PRINT("Store: "); DEBUG_PRINTLN(store);
         DEBUG_PRINT("Back: ");  DEBUG_PRINTLN(back);
         DEBUG_PRINT("Go: ");    DEBUG_PRINTLN(go);
-        
+
         lastBtnRead = timeNow;  // reset timer
+    } else {
+        DEBUG_PRINT("\n");
     }
 }
 
@@ -60,37 +70,34 @@ void write_to_leds(){
         analogWrite(digitalOutputsPWM[i], values[i]);
         DEBUG_PRINT(i);
         DEBUG_PRINT(": ");
-        DEBUG_PRINTLN(values[i]);
+        DEBUG_PRINT(values[i]);
+        DEBUG_PRINT("\t");
 
         DEBUG_PLOT(values[i]);
         DEBUG_PLOT("\t");
     }
+    DEBUG_PRINT("\n");
 }
 
 inline void write_to_indicators(){
     // write to lighting cue indicator LEDs
     for (int i = 0; i < NUM_CUES; ++i) {
-        digitalWriteFast(digitalOutputs[i], leds[i]);
+        cueLeds[i].update(&timeNow);
     }
 
     // write to mode indicator LEDs
     for (int i = 0; i < NUM_MODES; ++i) {
         if (bModeSelect) {
-            digitalWriteFast(mode_select[i], state != i);
+            digitalWriteFast(modeSelect[i], state != i);
         } else {
-            digitalWriteFast(mode_select[i], state == i);
+            digitalWriteFast(modeSelect[i], state == i);
         }
     }
 
     // write to time indicator LEDs
     for (int i = 0; i < NUM_TIMER; ++i) {
-        digitalWriteFast(time_indicator[i], timerLeds[i]);
+        digitalWriteFast(timeIndicator[i], timerLeds[i]);
     }
-}
-
-inline void flash_indicators() {
-    // flash indicator LEDs
-    memset(leds, 255, sizeof(leds));
 }
 
 inline void blink(uint8_t led, int time) {
@@ -112,15 +119,29 @@ inline void fade(uint8_t led, int time) {
     }
 }
 
-inline void led_from_selected_cue(){
-    for (int i = 0; i < NUM_CUES; ++i) {
-        leds[i] = (selectedCue == i);  
-    }
+inline void led_running(uint8_t selected){
+    cueLeds[selected].setMode(2);
 }
 
 inline void led_from_selected_cue(uint8_t selected){
     for (int i = 0; i < NUM_CUES; ++i) {
-        (i <= selected) ? (leds[i] = 255) : (leds[i] = 0);   
+        (i == selected) ? (cueLeds[i].setMode(1)) : (cueLeds[i].setMode(0));   
+    }
+}
+
+inline void led_from_selected_cue(uint8_t selected, bool bBlink){
+    uint8_t mode = 1;
+    if (bBlink) mode = 2;
+
+    for (int i = 0; i < NUM_CUES; ++i) {
+        (i == selected) ? (cueLeds[i].setMode(mode)) : (cueLeds[i].setMode(0));   
+    }
+}
+
+
+inline void led_up_to_cue(uint8_t selected){
+    for (int i = 0; i < NUM_CUES; ++i) {
+        (i <= selected) ? (cueLeds[i].setMode(1)) : (cueLeds[i].setMode(0));   
     }
 }
 
