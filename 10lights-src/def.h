@@ -4,6 +4,7 @@
 /* Gen */
 #include "libs/digitalfast.h"
 #include "libs/analogfast.h"
+#include "libs/UILed.h"
 #include "utils.h"
 #define BYTE_COEF       0.003921568627
 
@@ -58,10 +59,9 @@
 /* Pin Assignment */
 const uint8_t analogInputs[]      {A10, A0, A1, A2, A3, A4, A5, A6, A7, A8, A9}; // Faders, first is master
 const uint8_t digitalOutputsPWM[] {2,   12, 11, 10,  9,  8,  7 , 6,  5,  4,  3}; // channel indicator LED, first is master
-const uint8_t digitalOutputs[]    {22, 27, 23, 28, 24, 29, 25, 30, 26, 31};      // cue indicator LED
+const uint8_t cueIndicator[]      {22, 27, 23, 28, 24, 29, 25, 30, 26, 31};      // cue indicator LED
 const uint8_t digitalInputs[]     {13, 52, 53};                                  // store, back, go
-const uint8_t mode_select[]       {19, 20, 21};                                  // mode indicator (1-3)
-const uint8_t time_indicator[]    {41, 40, 39, 38, 37, 36, 35, 34, 33, 32};      // time indicator LED-bargraph, first is segment 1
-const uint8_t hlt_button[]        {43, 45, 47, 49, 51, 50, 48, 46, 44, 42};      // buttons for channel highlighting, first is CH1
+const uint8_t modeSelect[]        {19, 20, 21};                                  // mode indicator (1-3)
+const uint8_t timeIndicator[]     {41, 40, 39, 38, 37, 36, 35, 34, 33, 32};      // time indicator LED-bargraph, first is segment 1
  
 #endif
