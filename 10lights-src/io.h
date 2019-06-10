@@ -72,10 +72,16 @@ inline void write_to_indicators(){
     for (int i = 0; i < NUM_CUES; ++i) {
         digitalWriteFast(digitalOutputs[i], leds[i]);
     }
+
     // write to mode indicator LEDs
     for (int i = 0; i < NUM_MODES; ++i) {
-        digitalWriteFast(mode_select[i], state == i);
+        if (bModeSelect) {
+            digitalWriteFast(mode_select[i], state != i);
+        } else {
+            digitalWriteFast(mode_select[i], state == i);
+        }
     }
+
     // write to time indicator LEDs
     for (int i = 0; i < NUM_TIMER; ++i) {
         digitalWriteFast(time_indicator[i], timerLeds[i]);
@@ -106,9 +112,15 @@ inline void fade(uint8_t led, int time) {
     }
 }
 
+inline void led_from_selected_cue(){
+    for (int i = 0; i < NUM_CUES; ++i) {
+        leds[i] = (selectedCue == i);  
+    }
+}
+
 inline void led_from_selected_cue(uint8_t selected){
     for (int i = 0; i < NUM_CUES; ++i) {
-        (i <= selected) ? (leds[i] = 255) : (timerLeds[i] = 0);   
+        (i <= selected) ? (leds[i] = 255) : (leds[i] = 0);   
     }
 }
 
