@@ -244,7 +244,10 @@ void loop_execute(uint8_t called_mode){
 
         case MODE_2:        // Record
             // mode change resets cue select
-            if (bModeChanged) selectedCue = 0;
+            if (bModeChanged) {
+                selectedCue = 0;
+                bStandby = false;
+            }
             runningCue = selectedCue;       // no fading in mode 2
 
             // calculate values for leds
