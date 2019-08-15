@@ -46,6 +46,7 @@ uint32_t lastStore, lastBack, lastGo;
 /* Gen - Pin Values Faders */
 uint8_t faderValues[NUM_FADERS];     // values from faders at each iteration
 uint8_t values[NUM_FADERS];          // values for output
+uint8_t zeroValue[NUM_FADERS];       // initial fade values
 UILed   cueLeds[NUM_CUES];           // values for indicator leds
 uint8_t timerLeds[NUM_TIMER];        // values for timing indicators
 
@@ -210,6 +211,7 @@ uint8_t check_mode(){
         }
 
         if (bStartFade) {
+            memcpy (zeroValue, values, sizeof(zeroValue));       // initial fade values
             lastGo = timeNow;
             bFading = true;
             bStandby = false;
@@ -280,11 +282,11 @@ void loop_execute(uint8_t called_mode){
                 uint32_t fadeTimeElapsed;
 
                 fadeTime = lightingData[selectedCue][0];
-                DEBUG_PRINT("Cue fade time ");
+                DEBUG_PRINT("Cue fade time (decimal)");
                 DEBUG_PRINT(fadeTime);
 
                 fadeTime = map(fadeTime, 0, 255, 0, MAX_FADE);
-                DEBUG_PRINT(" to ");
+                DEBUG_PRINT(" corresponding to (ms) ");
                 DEBUG_PRINTLN(fadeTime);
 
                 fadeTimeElapsed = timeNow - lastGo;
@@ -292,34 +294,43 @@ void loop_execute(uint8_t called_mode){
                 if (fadeTimeElapsed < fadeTime) {
                     leds_from_time_delta(fadeTimeElapsed, fadeTime);
                     step = ((float)fadeTimeElapsed / fadeTime);
-                    DEBUG_PRINT("Fade ");
+                    
+                    DEBUG_PRINT("Fading ");
                     DEBUG_PRINT(step);
-                    DEBUG_PRINTLN(" completed ");
+                    DEBUG_PRINT(" percent of ");
+                    DEBUG_PRINT(fadeTimeElapsed);
+                    DEBUG_PRINT(" out of  ");
+                    DEBUG_PRINTLN(fadeTime);
                 } else {
                     bFading = false;
                     bCueChanged = true;
                     runningCue = selectedCue;
                 }
             }
+            // create aux variables
+            uint8_t target, v;
 
             // calculate values to pass
             for (int i = 1; i < NUM_FADERS; ++i) {
                 if (bStandby) {
                     values[i] = cap(faderValues[i], faderValues[0]);
                 } else {
-                    uint8_t target = cap(lightingData[selectedCue][i], faderValues[0]); 
-                    uint8_t v = target;
+                    v = target = lightingData[selectedCue][i];
+
+                    // calculate fade if necessary
                     if (bFading) {
-                        v = values[i] + ((target - values[i]) * step);
+                        v = (1 - step) * zeroValue[i] + step * target;
+
                         DEBUG_PRINT("Channel ");
                         DEBUG_PRINT(i);
                         DEBUG_PRINT(" Currently at ");
-                        DEBUG_PRINT(lightingData[selectedCue][i]);
-                        DEBUG_PRINT(" fading step: ");
+                        DEBUG_PRINT(values[i]);
+                        DEBUG_PRINT(" fading to: ");
                         DEBUG_PRINT(v);
                         DEBUG_PRINT(" of target ");
                         DEBUG_PRINTLN(target);
                     }
+                    // apply master
                     values[i] = largest(v , cap(faderValues[i], faderValues[0] ) );
                 }
             } 
